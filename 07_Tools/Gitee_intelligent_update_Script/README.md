@@ -76,57 +76,58 @@
 ## 📂 目录结构说明
 
 ```Text
-├─00_Project_Management			# 开发前的文档
-│  ├─00_需求导入_QFD
-│  ├─01_需求约束_Pugh
-│  ├─02_需求转化_Basic_Statics
-│  ├─03_功能图谱_Function_Map
-│  ├─04_功能风险管控_DFMEA
-│  ├─04_法规认证_国内_国外
-│  ├─04_知识产权_国内_国外
-│  ├─05_敏捷开发_Scrum
-│  ├─06_持续集成与测试_DevOps
-│  ├─07_产品生产管理_Six_Sigma
-│  └─08_缺陷管理追踪_Jira
-├─00_Reference					#参考文档
-├─01_Function_Map				#功能具体需求清单、流程图...
-├─02_Hardware					#硬件相关：原理图、PCB
-│  ├─00_Ref
-│  │  └─00_HDK					#Hardware Develop Toolkit
-│  └─01_Project
-├─03_Firmware					#放置版本.hex/.bin固件
-├─04_Software					#软件代码
-│  ├─00_Ref
-│  │  └─00_SDK
-|  |  └─....
-│  └─01_Source_Code
-├─05_Mechanical					#机械结构部分
-├─06_FCT						#产品发布后的上位机工具..
-└─07_Tools						#开发过程中用到的工具：自动测试、固件加密..。
+ProjectTable (项目根目录)
+├── 00_ProjectManagement (项目管理) [1, 2]
+│   ├── 00_需求导入——QFD [1, 2]
+│   ├── 01_需求约束——Pugh [1, 2]
+│   ├── 02_需求转化_BasicStatics [1, 2]
+│   ├── 03_功能图谱_FunctionMap (说明：项目所需实现的功能，可由系统需求分解成软硬件需求) [2]
+│   ├── 04_法规认证_国内国外 [1, 2]
+│   ├── 04_功能风险管控_DFMEA [1, 2]
+│   ├── 04_知识产权_国内_国外 [1, 2]
+│   ├── 05_敏捷开发_Scrum [1, 2]
+│   ├── 06_持续集成与测试_DevOps [1, 2]
+│   ├── 07_产品生产管理_SixSigma [1, 2]
+│   └── 08_缺陷管理追踪_Jira [1, 2]
+│
+├── 00_Reference (参考文档) [1, 2]
+│   ├── 01_DataSheet (说明：用于存放项目过程中所用到的芯片手册) [2]
+│   └── 02_Doc (说明：用于存放项目过程中所用到的资料) [2]
+│
+├── 01_FunctionMap (功能需求清单) [1, 2]
+│   ├── 01_HarwareFunction (说明：项目需要实现的硬件功能) [2]
+│   └── 02_SoftwareFunction (说明：项目需要实现的软件功能) [2]
+│
+├── 02_Hardware (硬件相关) [1, 2]
+│   ├── 01_project (说明：工程文档) [2]
+│   ├── 02_Sch (说明：原理图) [2]
+│   ├── 03_Pcb (说明：Pcb文件) [2]
+│   └── 04_Hardware_Software_Interface (说明：软硬件接口文件) [2]
+│
+├── 03_Firmware (固件/版本文件) [1, 2]
+│   ├── 01_Bootloader [2]
+│   └── 02_APP [2]
+│
+├── 04_Software (软件代码) [1, 2]
+│   ├── 01_PC_Software (上位机/电脑端软件) [2]
+│   └── 02_Mobile_Software (移动端软件) [2]
+│
+├── 05_Mechanical (机械结构) [1, 2]
+│   ├── 01_standard (说明：标准零部件) [2]
+│   └── 02_customization (说明：定制化零部件) [2]
+│
+├── 06_Factory (工厂测试) [2]
+│   └── (说明：用于工厂下线的测试版软件) [2]
+│
+├── 07_Tools (工具链) [1, 2]
+│   └── (说明：放置项目开发过程中所用到的工具，例如：自动化构建脚本、持续集成工具等) [1, 2]
+│
+└── README.md (说明文档) [1, 2]
 ```
 
 ------
 
 
-
-- 使用`git bash`删除每个目录下的`.gitkeep`文件
-
-```bash
-find . -type d -not -path "*/.git*" -exec rm -f {}/.gitkeep \;
-
-```
-
-- 为空文件夹增加`.gitkeep`文件
-
-```bash
-find ./ -type d -empty -not -path "./.git/*" -exec touch {}/.gitkeep \;
-```
-
-
-
-参考
-
-- [搞嵌入式，文件很多很乱？当始一个新的嵌入式项目，必做的准备工作--工程文件夹归档](https://www.bilibili.com/video/BV1E1421i7wJ/)
 
 **Author:** [zhang___qi](https://gitee.com/zhang___qi/projects)
 **Status:** In Progress... 🚀
