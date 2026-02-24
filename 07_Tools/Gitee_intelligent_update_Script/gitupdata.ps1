@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     交互式 Git 仓库管理脚本 V4 (去特殊符号版)
     目标仓库: E:\Git_Repository\Watch_project\EmbeddedProject_Folder
@@ -12,7 +12,7 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 git config --global core.quotepath false
 $REPO_PATH = "E:\Git_Repository\Watch_project\EmbeddedProject_Folder"
-$GITEE_REMOTE = "origin" 
+$GITEE_REMOTE = "https://gitee.com/zhang___qi/watch_project.git" 
 $COLOR_GREEN = "Green"; $COLOR_RED = "Red"; $COLOR_WHITE = "White"; $COLOR_CYAN = "Cyan"; $COLOR_YELLOW = "Yellow"
 
 # ==========================================
@@ -205,12 +205,29 @@ function Module-FileAndBranch {
             if ($cmd -eq "B") { break } 
 
             # 3. 提交逻辑
+            # 3. 提交逻辑（修复删除文件+未追踪文件问题）
             if ($cmd -eq "done") {
-                if ($selectedFiles.Count -eq 0) { Write-Info "未选择文件!" $COLOR_RED; Start-Sleep 1; continue }
-                foreach ($f in $selectedFiles) { git add "$f" }
+                # 步骤1：添加手动选中的文件
+                if ($selectedFiles.Count -gt 0) {
+                    foreach ($f in $selectedFiles) { git add "$f" }
+                }
+                # 步骤2：自动标记已追踪文件的删除/修改（解决deleted文件问题）
+                git add -u 2>&1 | Out-Null
+                # 步骤3：可选：自动添加所有未追踪的文件（解决Untracked files问题）
+                # 如果你想手动选则注释这行，想自动加则保留
+                git add . 2>&1 | Out-Null
+
+                # 检查是否有可提交的变更
+                $changes = git status --porcelain
+                if ([string]::IsNullOrWhiteSpace($changes)) {
+                    Write-Info "无可用的提交变更！" $COLOR_RED; Start-Sleep 2; continue
+                }
+
+                # 步骤4：提交
                 $msg = Get-CleanInput "Commit 备注"
                 if ($msg) {
                     git commit -m "$msg"
+                    # 推送（这里才用到 $GITEE_REMOTE）
                     if ((Get-CleanInput "推送? (Y/N)") -eq "Y") { 
                         git push $GITEE_REMOTE (git branch --show-current).Trim() 
                     }
