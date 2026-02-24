@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     交互式 Git 仓库管理脚本 V4 (去特殊符号版)
     目标仓库: E:\Git_Repository\Watch_project\EmbeddedProject_Folder
