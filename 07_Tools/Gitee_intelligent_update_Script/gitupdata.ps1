@@ -12,7 +12,7 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 git config --global core.quotepath false
 $REPO_PATH = "E:\Git_Repository\Watch_project\EmbeddedProject_Folder"
-$GITEE_REMOTE = "origin" 
+$GITEE_REMOTE = "https://gitee.com/zhang___qi/watch_project.git" 
 $COLOR_GREEN = "Green"; $COLOR_RED = "Red"; $COLOR_WHITE = "White"; $COLOR_CYAN = "Cyan"; $COLOR_YELLOW = "Yellow"
 
 # ==========================================
