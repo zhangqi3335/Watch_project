@@ -25,8 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "bsp_key_led.h"
 #include "queue.h"
+#include "bsp_key_led.h"
+#include "bsp_led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -58,18 +58,7 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-//************************ Thread_FUNC ****************************//
-osThreadId_t keyTaskHandle;
-const osThreadAttr_t keyTask_attributes = {
-  .name = "keyTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-//************************ Thread_FUNC ****************************//
 
-//************************ Queue_Handler ****************************//
-QueueHandle_t x_key_Queue;
-//************************ Queue_Handler ****************************//
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -83,7 +72,6 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-void StartkeyTask(void *argument);
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -109,6 +97,7 @@ void StartkeyTask(void *argument);
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   keyTaskHandle = osThreadNew(StartkeyTask, NULL, &keyTask_attributes);
+  ledTaskHandle = osThreadNew(StartledTask, NULL, &ledTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -127,15 +116,24 @@ void StartkeyTask(void *argument);
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-	key_press_status_t receive_data = KEY_PRESSED;
+	key_press_status_t receive_data_key = KEY_PRESSED;
+  led_operation_t receive_data_led    = LED_ON;
   /* Infinite loop */
   for(;;)
   {
-		if(pdPASS  == xQueueReceive(x_key_Queue,&receive_data,( TickType_t ) 10 ) )
-		{
-			printf("Receive data = [%d]",receive_data);
-		}	
-    osDelay(1);
+    if(x_key_Queue != NULL){
+      if(pdPASS  == xQueueReceive(x_key_Queue,&receive_data_key,( TickType_t ) 10 ) )
+      {
+        printf("Receive data = [%d]\r\n",receive_data_key);
+        receive_data_led    = LED_TOGGLE;
+        if(pdPASS  == xQueueSend(x_led_Queue,&receive_data_led,( TickType_t ) 10 ) )
+        {
+          printf("Send data = [%d]\r\n",receive_data_led);
+        }	
+      }	
+      
+    }
+    osDelay(100);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -143,52 +141,6 @@ void StartDefaultTask(void *argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
-
-/* USER CODE BEGIN Header_StartkeyTask */
-/**
-  * @brief  Function implementing the keyTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartkeyTask */
-void StartkeyTask(void *argument)
-{
-  /* USER CODE BEGIN StartkeyTask */
-  key_status_t key_ret          =          KEY_OK;
-  key_press_status_t key_status = KEY_NOT_PRESSED;
-	x_key_Queue = xQueueCreate( 10, sizeof( key_status_t ) );
-  /* Infinite loop */
-  for(;;)
-  {
-    key_ret = key_scan(&key_status);
-		if(KEY_OK == key_ret)
-    {
-      if(KEY_PRESSED == key_status)
-      {
-        printf("KEY_PRESSED \r\n");
-				if( x_key_Queue != 0 )
-				{
-					// available if necessary.
-					if( pdPASS == xQueueSend( x_key_Queue,  &key_status, ( TickType_t ) 10 )  )
-					{
-						printf("QueueSend successfully\r\n");
-					}
-					// Failed to post the message, even after 10 ticks.
-					if(pdPASS != xQueueSend( x_key_Queue,  &key_status, ( TickType_t ) 10 ))
-					{
-						printf("QueueSend failed\r\n");
-					}
-				}
-      }
-    }
-    if(KEY_OK != key_ret)
-    {
-      printf("KEY_NOT_PRESSED \r\n");
-    }
-    osDelay(10);
-  }
-  /* USER CODE END StartkeyTask */
-}
 
 /* USER CODE END Application */
 
