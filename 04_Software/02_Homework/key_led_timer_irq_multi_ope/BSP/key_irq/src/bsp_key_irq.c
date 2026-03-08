@@ -46,6 +46,9 @@ key_device_t g_key_dev=
     .gpio_port = Key_GPIO_Port,
     .gpio_pin = Key_Pin
 };
+
+    key_interrupt_msg_t msg;
+    key_interrupt_msg_t *p_msg = &msg;
 /* USER CODE END PV */
 
 
@@ -141,15 +144,14 @@ key_status_t key_scan(key_device_t* g_key_dev,key_press_status_t* press_type)
 void StartkeyTask(void *argument)
 {
     /* USER CODE BEGIN StartkeyTask */
-    key_interrupt_msg_t msg;
     uint32_t t1        = 0;
-    uint32_t t2        = 0;
     uint32_t delta     = 0;
-    uint8_t flash_cmd  = 0;
+    uint8_t flash_cmd = 0;
+    uint8_t key_logic_state = 0; // 按键逻辑状态：0=等待按下，1=已经按下正在等待松开
 
     x_key_Queue = xQueueCreate(10, sizeof(key_press_status_t));
-    x_key_irq_Queue = xQueueCreate(10, sizeof(key_interrupt_msg_t));
-    
+    x_key_irq_Queue = xQueueCreate(10, sizeof(key_interrupt_msg_t *));
+
     if(x_key_Queue == NULL || x_key_irq_Queue == NULL)
     {
         printf("Key queue create failed\r\n");
@@ -159,28 +161,40 @@ void StartkeyTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
-		 if(xQueueReceive(x_key_irq_Queue, &msg, 10) == pdTRUE)
+		 if(xQueueReceive(x_key_irq_Queue, &p_msg, 10) == pdTRUE)
         {
-            /*
-            printf("IRQ received\r\n");
-            printf("msg.trigger_tick = %lu\r\n", msg.trigger_tick);
-            printf("msg.edge_type = %d\r\n", msg.edge_type);
-            */
             
-            if(msg.edge_type == FALLING)
+            //printf("IRQ received\r\n");
+            //printf("msg.trigger_tick = %lu\r\n", msg.trigger_tick);
+            //printf("msg.edge_type = %d\r\n", msg.edge_type);
+            
+            if(p_msg->edge_type == FALLING)
             {
-                t1 = msg.trigger_tick;
+                t1 = p_msg->trigger_tick;
+                key_logic_state      = 1;
             }
-            else if(msg.edge_type == RISING)
+            else if(p_msg->edge_type == RISING)
             {
-                t2 = msg.trigger_tick;
-                delta = t2 - t1;
+                // 收到松开事件，计算按下的持续时间
+                if(msg.trigger_tick >= t1) 
+                {
+                    delta = msg.trigger_tick - t1;
+                }
+                else
+                {
+                    delta = (0xFFFFFFFF - t1) + msg.trigger_tick + 1;
+                }                       
+                    
                 if(delta < KEY_JITTER_THRESHOLD)
                 {
                     // 抖动，忽略
                     printf("bad press\r\n");
+                    continue;
                 }
-                else if(delta < KEY_LONG_THRESHOLD)
+
+                key_logic_state      = 0;
+
+                if(delta >= KEY_JITTER_THRESHOLD && delta < KEY_LONG_THRESHOLD)
                 {
                     flash_cmd = 1;
                     printf("short press\r\n");
@@ -208,29 +222,21 @@ void StartkeyTask(void *argument)
 KEY_CALLBACK{
     if(GPIO_Pin == Key_Pin)
     {
-        static uint32_t last_isr_tick = 0;
-        uint32_t current_tick = HAL_GetTick();
-        if ((current_tick-last_isr_tick)<KEY_JITTER_THRESHOLD)
-        {
-            return; // 抖动，忽略
-        }
-        last_isr_tick = current_tick;
-
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        key_interrupt_msg_t msg;
+        
 
-        msg.trigger_tick = current_tick;
+        p_msg->trigger_tick =  HAL_GetTick();
 
         if(HAL_GPIO_ReadPin(Key_GPIO_Port, Key_Pin) == GPIO_PIN_RESET)
         {
-            msg.edge_type = FALLING;  // 按下
+            p_msg->edge_type = FALLING;  // 按下
 
             EXTI->FTSR &= ~Key_Pin; // 先清除下降沿触发
             EXTI->RTSR |= Key_Pin;  // 切换为上升沿触发
         }
         else
         {
-            msg.edge_type = RISING;   // 松开
+            p_msg->edge_type = RISING;   // 松开
 
             EXTI->RTSR &= ~Key_Pin; // 先清除上升沿触发
             EXTI->FTSR |= Key_Pin;  // 切换为下降沿触发
@@ -238,7 +244,7 @@ KEY_CALLBACK{
 
         if(x_key_irq_Queue != NULL)
         {
-            xQueueSendFromISR(x_key_irq_Queue, &msg, &xHigherPriorityTaskWoken);
+            xQueueSendFromISR(x_key_irq_Queue, &p_msg, &xHigherPriorityTaskWoken);
         }
 
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

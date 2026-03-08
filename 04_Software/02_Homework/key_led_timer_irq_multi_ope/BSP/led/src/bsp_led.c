@@ -109,13 +109,19 @@ void StartledTask(void *argument)
         if( x_led_Queue != 0 )
         {
             // available if necessary.
-            if( pdPASS == xQueueReceive( x_led_Queue,  &received_flash_times, ( TickType_t ) 10 )  )
+            if( pdPASS == xQueueReceive( x_led_Queue,  &received_flash_times, portMAX_DELAY )  )
             {
                 if (0 == g_led_ctrl.led_pwm_running)
                 {
                     g_led_ctrl.led_flash_times = received_flash_times;
                     g_led_ctrl.led_current_times = 0;
                     g_led_ctrl.led_pwm_running = 1;
+
+                    // 1. 【核心修复】清除上电初始化的历史幽灵标志位
+                    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
+                    
+                    // 2. 清零计数器，保证第一波电平完整
+                    __HAL_TIM_SET_COUNTER(&htim2, 0); 
 
                     HAL_TIM_Base_Start_IT(&htim2); // 启动定时器中断
                     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); // 启动PWM输出

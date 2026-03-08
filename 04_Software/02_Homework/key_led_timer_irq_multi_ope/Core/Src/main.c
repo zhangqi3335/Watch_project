@@ -183,7 +183,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         HAL_TIM_Base_Stop_IT(&htim2);
         HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2); // 停止PWM输出
 
-        __HAL_TIM_SET_COUNTER(&htim2, 0); // 重置计数器
+        __HAL_TIM_SET_COUNTER(&htim2, 0); // 重置计数�?
         g_led_ctrl.led_pwm_running = 0;
         g_led_ctrl.led_current_times = 0;
       }
