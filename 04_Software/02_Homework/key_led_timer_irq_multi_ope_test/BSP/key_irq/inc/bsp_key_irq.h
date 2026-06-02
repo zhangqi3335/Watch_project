@@ -100,9 +100,9 @@ typedef struct
 //**************************** Defines ****************************//           
 
 //*************************** Declaring ***************************//
-
 void StartkeyTask(void *argument);
 key_status_t key_scan(key_device_t* g_key_dev,key_press_status_t* press_type);
+
 //*************************** Declaring ***************************//
 #endif
 

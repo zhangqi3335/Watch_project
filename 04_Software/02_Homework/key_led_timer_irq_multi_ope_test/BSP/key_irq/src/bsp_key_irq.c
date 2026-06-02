@@ -159,11 +159,12 @@ void StartkeyTask(void *argument)
         vTaskDelete(NULL);
     }
 	
-    
+   
 
     /* Infinite loop */
     for(;;)
     {
+         
 		 if(xQueueReceive(x_key_irq_Queue, &p_msg, 10) == pdTRUE)
         {
             g_keytask_count++; //每进一次任务记一次数
@@ -201,7 +202,6 @@ void StartkeyTask(void *argument)
                     flash_cmd = 1;
                     printf("short press\r\n");
                     xQueueSend(x_led_Queue,&flash_cmd,(TickType_t)10);
-                    Trigger_USART1_Interrupt(); // 触发 USART1 中断，测试中断嵌套
                     printf("short press irq counter: %d\r\n", g_irq_count);
                     printf("short press task counter: %d\r\n", g_keytask_count);
                     
@@ -252,8 +252,6 @@ KEY_CALLBACK{
             EXTI->FTSR |= Key_Pin;  // 切换为下降沿触发
         }
 
-     
-
         if(x_key_irq_Queue != NULL)
         {
             xQueueSendFromISR(x_key_irq_Queue, &p_msg, &xHigherPriorityTaskWoken);
@@ -264,3 +262,8 @@ KEY_CALLBACK{
     }
 }
 /* USER CODE END  */
+
+/* USER CODE BEGIN  */
+
+/* USER CODE END  */
+

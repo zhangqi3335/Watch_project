@@ -28,6 +28,7 @@
 #include "queue.h"
 #include "bsp_key_irq.h"
 #include "bsp_led.h"
+#include "SEGGER_RTT.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -120,8 +121,8 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-		
-    osDelay(10); 
+    printf("%.2f\n", 3.14f);
+    osDelay(1000); 
   }
   /* USER CODE END StartDefaultTask */
 }
