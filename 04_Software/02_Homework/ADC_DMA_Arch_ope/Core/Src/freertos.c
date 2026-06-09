@@ -25,7 +25,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+<<<<<<< HEAD
 
+=======
+#include "elog.h"
+>>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +39,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+<<<<<<< HEAD
 
+=======
+//#define LOG_TAG "FREERTOS"
+>>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -117,6 +125,10 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+<<<<<<< HEAD
+=======
+    log_i("HELLO");
+>>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
