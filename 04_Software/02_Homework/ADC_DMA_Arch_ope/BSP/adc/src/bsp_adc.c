@@ -94,7 +94,6 @@ void StartADCTask1(void *argument)
         xQueueSend(xQueue, &p_complete, portMAX_DELAY); // 将完成的缓冲区指针发送到队列
     }
     /* USER CODE END StartADCTask1*/
-    osDelay(10);
 }
 
 /**
