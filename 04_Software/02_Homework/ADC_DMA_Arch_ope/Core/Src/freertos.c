@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "elog.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//#define LOG_TAG "FREERTOS"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -117,6 +117,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+    log_i("HELLO");
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */

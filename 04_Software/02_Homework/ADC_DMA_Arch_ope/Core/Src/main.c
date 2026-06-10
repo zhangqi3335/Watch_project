@@ -26,7 +26,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "SEGGER_RTT.h"
+#include "elog.h"
+#include "bsp_adc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +56,7 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+void app_elog_init(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -85,7 +87,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  SEGGER_RTT_Init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -94,7 +96,9 @@ int main(void)
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  app_elog_init();
+  BSP_ADC_Init();
+  BSP_ADC_Start();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -161,7 +165,23 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+/**
+ * @brief Initialize the easylogger module.
+ * @param None
+ * @retval None
+ */
+void app_elog_init(void){
+  elog_init();
+  /* Set the log format */
+  elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_ALL);
+  /* Set the output interface */
+  elog_set_filter_lvl(ELOG_LVL_VERBOSE);
+  elog_start();
+}
 /* USER CODE END 4 */
 
 /**
