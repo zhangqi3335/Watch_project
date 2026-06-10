@@ -26,13 +26,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-<<<<<<< HEAD
-
-=======
 #include "SEGGER_RTT.h"
 #include "elog.h"
 #include "bsp_adc.h"
->>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,11 +56,7 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-<<<<<<< HEAD
-
-=======
 void app_elog_init(void);
->>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,11 +87,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-<<<<<<< HEAD
-
-=======
   SEGGER_RTT_Init();
->>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -108,13 +96,9 @@ int main(void)
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-<<<<<<< HEAD
-
-=======
   app_elog_init();
   BSP_ADC_Init();
   BSP_ADC_Start();
->>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -181,9 +165,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-<<<<<<< HEAD
-
-=======
 /**
  * @brief Initialize the easylogger module.
  * @param None
@@ -201,7 +182,6 @@ void app_elog_init(void){
   elog_set_filter_lvl(ELOG_LVL_VERBOSE);
   elog_start();
 }
->>>>>>> 7f7d728 (本项目采用互斥量的方案进行学习，在下个中级代码中采用其他方案)
 /* USER CODE END 4 */
 
 /**
