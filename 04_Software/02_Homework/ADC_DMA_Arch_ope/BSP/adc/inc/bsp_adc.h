@@ -25,6 +25,8 @@ extern "C" {
 /* Exported functions -------------------------------------------------------*/
 void BSP_ADC_Init(void);
 void BSP_ADC_Start(void);
+void BSP_ADC_Task_Init(void);
+void BSP_ADC_variable_init(void);
 #ifdef __cplusplus
 }
 #endif

@@ -21,7 +21,8 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "SEGGER_RTT.h"
+#include <stdio.h>
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -110,5 +111,26 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+#ifdef __GNUC__
+  #define PUTCHAR_PHOTOTYPE int _io_putchar(int ch)
+#else
+  #define PUTCHAR_PHOTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+/**
+ * @brief Retarget the C library printf function to the USART.
+ * @param NONE
+ * @return NONE
+ */
+/*
+PUTCHAR_PHOTOTYPE
+{
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
+*/
+PUTCHAR_PHOTOTYPE
+{
+  SEGGER_RTT_PutChar(0, (char)ch);
+  return ch;
+}
 /* USER CODE END 1 */

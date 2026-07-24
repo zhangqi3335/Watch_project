@@ -32,14 +32,14 @@
 osThreadId_t ADCTask1Handle;
 const osThreadAttr_t ADCTask1_attributes = {
     .name = "ADCTask1",
-    .stack_size = 128 * 4,
+    .stack_size = 512 * 4,
     .priority = (osPriority_t)osPriorityAboveNormal,
 };
 
 osThreadId_t ADCTask2Handle;
 const osThreadAttr_t ADCTask2_attributes = {
     .name = "ADCTask2",
-    .stack_size = 128 * 4,
+    .stack_size = 512 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
 // 存储ADC的数据
@@ -50,6 +50,9 @@ QueueHandle_t xQueue = NULL;
 SemaphoreHandle_t xMutex = NULL;
 // 指针状态标志位
 volatile uint8_t g_usingbuf = 1;
+volatile uint32_t g_isr_count = 0;
+volatile uint32_t task1_alive = 0;
+volatile uint32_t task2_alive = 0;
 /* Private function prototypes ----------------------------------------------*/
 /* Create the thread(s) */
 void StartADCTask1(void *argument);
@@ -66,9 +69,11 @@ void BSP_ADC_variable_init(void);
 void StartADCTask1(void *argument)
 {
     /* USER CODE BEGIN StartADCTask1*/
+    BSP_ADC_Start();
     /* Infinite loop */
     for (;;)
     {
+        task1_alive++;
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         // 记录刚完成的是哪个Buffer，准备切DMA
         uint32_t *p_complete = NULL;
@@ -84,14 +89,16 @@ void StartADCTask1(void *argument)
             p_next = gp_buffer1;
         }
         xSemaphoreTake(xMutex, portMAX_DELAY);
+        HAL_ADC_Stop_DMA(&hadc1);
         if (HAL_ADC_Start_DMA(&hadc1, p_next, ADC_BUFFER_SIZE) != HAL_OK)
         {
             // Handle ADC DMA start failure
-            log_e("Failed to start ADC DMA");
+            elog_e("DEBUG", "Failed to start ADC DMA");
         }
         g_usingbuf = (g_usingbuf == 1) ? 2 : 1; // 切换标志位
         xSemaphoreGive(xMutex);
         xQueueSend(xQueue, &p_complete, portMAX_DELAY); // 将完成的缓冲区指针发送到队列
+        osDelay(10);
     }
     /* USER CODE END StartADCTask1*/
 }
@@ -108,18 +115,23 @@ void StartADCTask2(void *argument)
     /* Infinite loop */
     for (;;)
     {
+        task2_alive++;
         uint32_t *p_buffer = NULL;
+        elog_i("DEBUG", "ADCTask2 received buffer first");
         xQueueReceive(xQueue, &p_buffer, portMAX_DELAY); // 从队列中取出完成的缓冲区指针
+        elog_i("DEBUG", "ADCTask2 received buffer %p", p_buffer);
         xSemaphoreTake(xMutex, portMAX_DELAY);
         // Process the completed buffer
-        for (int i = 0; i < ADC_BUFFER_SIZE; i++)
-        {
-            float adc_voltage = (float)((p_buffer[i]) * 3.3 / 4096); // 读取ADC值
-            log_i("ADC Voltage: %fV", adc_voltage);
-        }
+        elog_i("DEBUG", "Processing ADC data:");
+        float voltage = (float)p_buffer[0] * 3.3f / 4096; // 12位ADC，参考电压3.3V
+        elog_i("DEBUG", "ADC Voltage: %fV", voltage);
+        float voltage2 = (float)p_buffer[31] * 3.3f / 4096; // 12位ADC，参考电压3.3V
+        elog_i("DEBUG", "ADC Voltage: %fV", voltage2);
         xSemaphoreGive(xMutex);
+        osDelay(100);
     }
     /* USER CODE END StartADCTask2*/
+    
 }
 
 void BSP_ADC_Init(void)
@@ -130,24 +142,28 @@ void BSP_ADC_Init(void)
 
 void BSP_ADC_Start(void)
 {
-    if (HAL_ADC_Start_DMA(&hadc1, gp_buffer1, ADC_BUFFER_SIZE) != HAL_OK)
+    int ret = HAL_ADC_Start_DMA(&hadc1, gp_buffer1, ADC_BUFFER_SIZE);
+    if (ret != HAL_OK)
     {
         // Handle ADC DMA start failure
-        log_e("Failed to start ADC DMA");
+        elog_e("ADC", "Failed to start ADC DMA");
     }
+    //elog_i("ADC", "ADC DMA started successfully:ret=%d", ret);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
+    g_isr_count++;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xTaskNotifyFromISR(ADCTask1Handle, 0, eNoAction, &xHigherPriorityTaskWoken);
+    vTaskNotifyGiveFromISR(ADCTask1Handle, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
-/* Private functions --------------------------------------------------------*/
+} /* Private functions --------------------------------------------------------*/
 void BSP_ADC_Task_Init(void)
 {
     ADCTask1Handle = osThreadNew(StartADCTask1, NULL, &ADCTask1_attributes);
     ADCTask2Handle = osThreadNew(StartADCTask2, NULL, &ADCTask2_attributes);
+    configASSERT(ADCTask1Handle);
+    configASSERT(ADCTask2Handle);
 }
 
 void BSP_ADC_variable_init(void)
@@ -157,18 +173,18 @@ void BSP_ADC_variable_init(void)
     if (gp_buffer1 == NULL || gp_buffer2 == NULL)
     {
         // Handle memory allocation failure
-        log_e("Failed to allocate memory for ADC buffers");
+        elog_e("DEBUG", "Failed to allocate memory for ADC buffers");
         while (1)
         {
         };
     }
     memset(gp_buffer1, 0, ADC_BUFFER_SIZE * sizeof(uint32_t));
     memset(gp_buffer2, 0, ADC_BUFFER_SIZE * sizeof(uint32_t));
-    xQueue = xQueueCreate(1, sizeof(uint32_t *));
+    xQueue = xQueueCreate(4, sizeof(uint32_t *));
     if (xQueue == NULL)
     {
         // Handle queue creation failure
-        log_e("Failed to create queue");
+        elog_e("DEBUG", "Failed to create queue");
         while (1)
         {
         };
@@ -177,7 +193,7 @@ void BSP_ADC_variable_init(void)
     if (xMutex == NULL)
     {
         // Handle mutex creation failure
-        log_e("Failed to create mutex");
+        elog_e("DEBUG", "Failed to create mutex");
         while (1)
         {
         };
