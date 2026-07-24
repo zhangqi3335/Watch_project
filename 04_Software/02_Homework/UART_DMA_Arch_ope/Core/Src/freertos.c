@@ -48,10 +48,10 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+/* Definitions for Task_uart_rec_A */
+osThreadId_t Task_uart_rec_AHandle;
+const osThreadAttr_t Task_uart_rec_A_attributes = {
+  .name = "Task_uart_rec_A",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -61,7 +61,7 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void uart_rec_A_func(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -92,8 +92,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of Task_uart_rec_A */
+  Task_uart_rec_AHandle = osThreadNew(uart_rec_A_func, NULL, &Task_uart_rec_A_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -108,23 +108,22 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_uart_rec_A_func */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the Task_uart_rec_A thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_uart_rec_A_func */
+void uart_rec_A_func(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN uart_rec_A_func */
   /* Infinite loop */
   for(;;)
   {
-    log_i("HELLO");
-    osDelay(1000);
+    osDelay(1);
   }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END uart_rec_A_func */
 }
 
 /* Private application code --------------------------------------------------*/
