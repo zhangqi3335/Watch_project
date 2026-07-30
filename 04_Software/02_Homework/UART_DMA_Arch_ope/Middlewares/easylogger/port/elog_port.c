@@ -25,7 +25,7 @@
  * Function: Portable interface for each platform.
  * Created on: 2015-04-28
  */
- 
+
 #include <elog.h>
 #include <SEGGER_RTT.h>
 #include "FreeRTOS.h"
@@ -34,22 +34,26 @@
 #include <stdio.h>
 
 // ================== 切换输出通道 ==================
-#define LOG_OUTPUT_RTT      // ← 有 J-Link 用这行
-// #define LOG_OUTPUT_UART   // ← 没 J-Link 改成这行
+#define LOG_OUTPUT_RTT       // ← 有 J-Link 用这行
+// #define LOG_OUTPUT_UART      // ← 没 J-Link 改成这行
+// #define LOG_OUTPUT_WITHMUTEX // ← 需要线程安全就打开这行
 // =================================================
 /*--------------Prviate variables --------------*/
+#if defined(LOG_OUTPUT_WITHMUTEX)
 static SemaphoreHandle_t log_mutex;
-
+#endif
 /**
  * EasyLogger port initialize
  *
  * @return result
  */
-ElogErrCode elog_port_init(void) {
+ElogErrCode elog_port_init(void)
+{
     ElogErrCode result = ELOG_NO_ERR;
-
-    /* add your code here */
+/* add your code here */
+#if defined(LOG_OUTPUT_WITHMUTEX)
     log_mutex = xSemaphoreCreateMutex();
+#endif
     return result;
 }
 
@@ -57,10 +61,10 @@ ElogErrCode elog_port_init(void) {
  * EasyLogger port deinitialize
  *
  */
-void elog_port_deinit(void) {
+void elog_port_deinit(void)
+{
 
     /* add your code here */
-
 }
 
 /**
@@ -70,38 +74,47 @@ void elog_port_deinit(void) {
  * @param size log size
  */
 #if defined(LOG_OUTPUT_RTT)
-    #include "SEGGER_RTT.h"
-    void elog_port_output(const char *log, size_t size) {
-        SEGGER_RTT_Write(0, log, size);
-    }
+#include "SEGGER_RTT.h"
+void elog_port_output(const char *log, size_t size)
+{
+    SEGGER_RTT_Write(0, log, size);
+}
 
 #elif defined(LOG_OUTPUT_UART)
-    #include "usart.h"
-    void elog_port_output(const char *log, size_t size) {
-        HAL_UART_Transmit(&huart1, (uint8_t *)log, size, 100);
-    }
+#include "usart.h"
+void elog_port_output(const char *log, size_t size)
+{
+    HAL_UART_Transmit(&huart1, (uint8_t *)log, size, 100);
+}
 #else
-    void elog_port_output(const char *log, size_t size) {
-        // 空实现，不输出
-    }
+void elog_port_output(const char *log, size_t size)
+{
+    // 空实现，不输出
+}
 #endif
 
 /**
  * output lock
  */
-void elog_port_output_lock(void) {
-    
-    /* add your code here */
+void elog_port_output_lock(void)
+{
+
+/* add your code here */
+#if defined(LOG_OUTPUT_WITHMUTEX)
     xSemaphoreTake(log_mutex, portMAX_DELAY);
+#endif
 }
 
 /**
  * output unlock
  */
-void elog_port_output_unlock(void) {
-    
-    /* add your code here */
+void elog_port_output_unlock(void)
+{
+
+/* add your code here */
+#if defined(LOG_OUTPUT_WITHMUTEX)
     xSemaphoreGive(log_mutex);
+#endif
 }
 
 /**
@@ -109,8 +122,9 @@ void elog_port_output_unlock(void) {
  *
  * @return current time
  */
-const char *elog_port_get_time(void) {
-    
+const char *elog_port_get_time(void)
+{
+
     /* add your code here */
     static char tim_buf[16];
     sprintf(tim_buf, "%lu", xTaskGetTickCount());
@@ -122,8 +136,9 @@ const char *elog_port_get_time(void) {
  *
  * @return current process name
  */
-const char *elog_port_get_p_info(void) {
-    
+const char *elog_port_get_p_info(void)
+{
+
     /* add your code here */
     return "ADC+DMA";
 }
@@ -133,8 +148,9 @@ const char *elog_port_get_p_info(void) {
  *
  * @return current thread name
  */
-const char *elog_port_get_t_info(void) {
-    
+const char *elog_port_get_t_info(void)
+{
+
     /* add your code here */
     return pcTaskGetName(NULL);
 }
