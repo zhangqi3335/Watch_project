@@ -1,46 +1,106 @@
-/******************************************************************************
- * Copyright (C)
- *
- * All Rights Reserved.
- *
- * @file mid_circular_buffer.h
- *
- * @author 张奇
- *
- * @brief Middeleware for circular buffer.
- *
- * @version V1.0 <2026-07-29>
- *
- *****************************************************************************/
-#ifndef __MID_CIRCULAR_BUFFER_H__
-#define __MID_CIRCULAR_BUFFER_H__
+#ifndef __MID_CIRCULAR_BUFFER__
+#define __MID_CIRCULAR_BUFFER__
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-/* Include ----------------------------------------------------------------- */
 #include <stdint.h>
-/* Exported Defines ---------------------------------------------------------*/
-#define CIRCULAR_BUFFER_SIZE 100
-/* Exported typedef ---------------------------------------------------------*/
+
+#define CIRCULAR_BUFFER_SIZE 10
+
 typedef uint8_t data_type_t;
+
 typedef struct
 {
     data_type_t data[CIRCULAR_BUFFER_SIZE];
     uint32_t head;
     uint32_t tail;
-}circular_buffer_t;
-/* Exported FunctionPrototypes  -------------------------------------------- */
-circular_buffer_t * create_empty_circular_buffer(void);
-uint8_t buffer_is_empty  (circular_buffer_t * p_buffer);
-uint8_t buffer_is_full   (circular_buffer_t * p_buffer);
-uint8_t insert_data      (circular_buffer_t * p_buffer, data_type_t data) ;
-uint8_t get_data         (circular_buffer_t * p_buffer, data_type_t * data);
-/* Exported functions -------------------------------------------------------*/
-#ifdef __cplusplus
-}
-#endif
+} circular_buffer_t;
 
-#endif //__MID_CIRCULAR_BUFFER_H__
+circular_buffer_t *create_empty_circular_buffer(void);
+
+/**
+ * @brief buffer_is_empty.
+ *
+ *
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ *
+* @return      uint8_t :
+                        0xff:error, the p_buffer is NULL;
+                        0x00:is empty
+                        0x01:is not empty
+ *
+ * */
+uint8_t buffer_is_empty(circular_buffer_t *p_buffer);
+/**
+ * @brief buffer_is_full.
+ *
+ *
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ *
+* @return      uint8_t :
+                        0xff:error, the p_buffer is NULL;
+                        0x00:is full
+                        0x01:is not full
+ *
+ * */
+uint8_t buffer_is_full(circular_buffer_t *p_buffer);
+/**
+ * @brief insert_data.
+ *
+ *
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ *
+* @return      uint8_t :
+                        0xff:error, the buffer is full;
+                        0x00:success
+                        0x01:failed
+ *
+ * */
+uint8_t insert_data(circular_buffer_t *p_buffer,
+                    data_type_t data);
+/**
+ * @brief get_data.
+ *
+ *
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ *
+* @return      uint8_t :
+                        0xff:error, the buffer pointer is NULL;
+                        0xfe:error, the buffer is empty;
+                        0x00:success
+                        0x01:failed
+ *
+ * */
+uint8_t get_data(circular_buffer_t *p_buffer,
+                 data_type_t *data);
+
+/**
+* @brief get_data.
+*
+*
+* @param[in] circular_buffer_t : Pointer to the target of handler.
+* @package[in] increment_num : num to add to the head position of the circular buffer.
+* @return      uint8_t :
+0xff:error, the buffer pointer is NULL;
+0xfe:error, the buffer is empty;
+0x00:success
+0x01:failed
+*
+* */
+uint8_t head_pos_increment(circular_buffer_t *p_buffer,
+                           uint32_t increment_num);
+
+/**
+* @brief get_head_pos.
+*
+*
+* @param[in] circular_buffer_t : Pointer to the target of handler.
+* @package[in] head_pos : Pointer to the head position of the circular buffer.
+* @return      uint8_t :
+0xff:error, the buffer pointer is NULL;
+0xfe:error, the buffer is empty;
+0x00:success
+0x01:failed
+*
+* */
+uint8_t get_head_pos(circular_buffer_t *p_buffer,
+                     uint32_t *head_pos);
+#endif // end __MID_CIRCULAR_BUFFER__

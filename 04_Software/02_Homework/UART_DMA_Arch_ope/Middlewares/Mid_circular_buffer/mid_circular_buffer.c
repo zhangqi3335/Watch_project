@@ -1,142 +1,196 @@
-/******************************************************************************
- * Copyright (C)
- *
- * All Rights Reserved.
- *
- * @file mid_circular_buffer.c
- *
- * @author 张奇
- *
- * @brief Middleware for circular buffer.
- *
- * @version V1.0 <2026-07-30>
- *
- *****************************************************************************/
-/* Include ------------------------------------------------------------------*/
 #include "mid_circular_buffer.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-/* Private typedef ----------------------------------------------------------*/
-/* Private define -----------------------------------------------------------*/
-/* Private macro ------------------------------------------------------------*/
-/* Private variables --------------------------------------------------------*/
-/* Private function prototypes ----------------------------------------------*/
-/* Public variables ---------------------------------------------------------*/
-/* Public functions ---------------------------------------------------------*/
-/**
- * @brief Create a empty circular buffer object
- *
- * @return circular_buffer_t*
- */
-circular_buffer_t *create_empty_circular_buffer(void)
-{
-    // 分配整个结构体的内存
-    circular_buffer_t *p_buffer = (circular_buffer_t *)malloc(sizeof(circular_buffer_t));
-    
-    if (NULL != p_buffer)
-    {
-        memset(p_buffer->data, 0, CIRCULAR_BUFFER_SIZE); 
-        p_buffer->head = 0;
-        p_buffer->tail = 0;
-    }
-    
-    return p_buffer;
-}
 
-/**
- * @brief Check if the circular buffer is empty
- *
- * @param[in] p_buffer Pointer to the circular buffer
- * @return  0xFF if the buffer is NULL,
- *          0x00 if the buffer is empty,
- *          0x01 if the buffer is not empty
- */
-uint8_t buffer_is_empty(circular_buffer_t *p_buffer)
+#include "elog.h"
+
+//TBD : comment: create 
+circular_buffer_t * create_empty_circular_buffer (void)
 {
-    if (NULL == p_buffer)
+    circular_buffer_t * p_buffer_temp = NULL;
+    // 1. alloct the memory space
+    p_buffer_temp = (circular_buffer_t *) malloc(sizeof(circular_buffer_t));
+    if ( NULL == p_buffer_temp ) 
     {
-        return 0xFF; // Buffer is empty if pointer is NULL
+        log_e("error: create_empty_circular_buffer");
+        return NULL;
     }
-    if (p_buffer->head == p_buffer->tail)
+    
+    // 2. memory init
+    memset ( p_buffer_temp, 0, sizeof(circular_buffer_t));
+    
+    return p_buffer_temp;
+}
+/**
+ * @brief buffer_is_empty.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * 
+* @return      uint8_t : 
+                        0xff:error, the p_buffer is NULL;
+                        0x00:is empty
+                        0x01:is not empty
+ * 
+ * */
+uint8_t             buffer_is_empty  (circular_buffer_t * p_buffer)
+{
+    if ( NULL == p_buffer )
     {
-        return 0x00; // Buffer is empty
+        return 0xFF;
+    }        
+    if ( p_buffer->head == p_buffer->tail )
+    {
+        return 0x00;
     }
     else
     {
-        return 0x01; // Buffer is not empty
-    }
+        return 0x01;
+    }        
 }
-
 /**
- * @brief Check if the circular buffer is full
- *
- * @param[in] p_buffer Pointer to the circular buffer
- * @return  0xFF if the buffer is NULL,
- *          0x00 if the buffer is full,
- *          0x01 if the buffer is not full
- */
-uint8_t buffer_is_full(circular_buffer_t *p_buffer)
+ * @brief buffer_is_full.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * 
+* @return      uint8_t : 
+                        0xff:error, the p_buffer is NULL;
+                        0x00:is full
+                        0x01:is not full
+ * 
+ * */
+uint8_t             buffer_is_full   (circular_buffer_t * p_buffer)
 {
-    if (NULL == p_buffer)
+    if ( NULL == p_buffer )
     {
-        return 0xFF; // Buffer is full if pointer is NULL
-    }
-    if ((p_buffer->head + 1) % CIRCULAR_BUFFER_SIZE == (p_buffer->tail) % CIRCULAR_BUFFER_SIZE)
+        return 0xFF;
+    }  
+    if (
+        (( (p_buffer->head)%CIRCULAR_BUFFER_SIZE) + 1) == 
+        ( (p_buffer->tail)%CIRCULAR_BUFFER_SIZE)
+        )
     {
-        return 0x00; // Buffer is full
+        return 0x00;
     }
     else
     {
-        return 0x01; // Buffer is not full
-    }
+        return 0x01;
+    }      
 }
 
 /**
- * @brief Insert data into the circular buffer
- *
- * @param[in] p_buffer Pointer to the circular buffer
- * @param data The data to be inserted
- * @return 0xFF if the buffer is NULL,
- *         0xFE if the buffer is full,
- *         0x00 if the data is inserted successfully
- */
-uint8_t insert_data(circular_buffer_t *p_buffer, data_type_t data)
+ * @brief insert_data.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * 
+* @return      uint8_t : 
+                        0xff:error, the buffer pointer is NULL;
+                        0xfe:error, the buffer is full;
+                        0x00:success
+                        0x01:failed
+ * 
+ * */
+uint8_t             insert_data      (circular_buffer_t * p_buffer,\
+                                                  data_type_t data)
 {
-    if (NULL == p_buffer)
+    if ( NULL == p_buffer )
     {
-        return 0xFF; // Buffer is NULL
+        return 0xFF;
     }
-    if (buffer_is_full(p_buffer) == 0x00)
+    if( 0x00 == buffer_is_full(p_buffer) )
     {
-        return 0xFE; // Buffer is full
+        return 0xFE;
     }
-    p_buffer->data[p_buffer->head] = data;
-    p_buffer->head = (p_buffer->head + 1) % CIRCULAR_BUFFER_SIZE;
-    return 0x00; // Data inserted successfully
+    
+    p_buffer->data[(p_buffer->head)%CIRCULAR_BUFFER_SIZE] = data;
+    
+    p_buffer->head++;
+    
+    return 0x00;
+
+
 }
 
 /**
- * @brief Get data from the circular buffer
- *
- * @param[in] p_buffer Pointer to the circular buffer
- * @param[out] data The data to be retrieved
- * @return 0xFF if the buffer is NULL,
- *         0xFE if the buffer is empty,
- *         0x00 if the data is retrieved successfully
- */
-uint8_t get_data(circular_buffer_t *p_buffer, data_type_t *data)
+ * @brief get_data.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * 
+* @return      uint8_t : 
+                        0xff:error, the buffer pointer is NULL;
+                        0xfe:error, the buffer is empty;
+                        0x00:success
+                        0x01:failed
+ * 
+ * */
+uint8_t             get_data         (circular_buffer_t * p_buffer,\
+                                                data_type_t * data)
 {
-    if (NULL == p_buffer || NULL == data)
+    if ( NULL == p_buffer )
     {
-        return 0xFF; // Buffer or data pointer is NULL
+        return 0xFF;
     }
-    if (buffer_is_empty(p_buffer) == 0x00)
+    if( 0x00 == buffer_is_empty(p_buffer) )
     {
-        return 0xFE; // Buffer is empty
+        return 0xFE;
     }
-    *data = p_buffer->data[p_buffer->tail];
-    p_buffer->tail = (p_buffer->tail + 1) % CIRCULAR_BUFFER_SIZE;
-    return 0x00; // Data retrieved successfully
+    *data = p_buffer->data[(p_buffer->tail)%CIRCULAR_BUFFER_SIZE];
+    p_buffer->tail++;
+    
+    return 0x00;
 }
-/* Private functions --------------------------------------------------------*/
+
+
+/**
+ * @brief get_head_pos.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * @package[in] head_pos : Pointer to the head position of the circular buffer.
+* @return      uint8_t : 
+                        0xff:error, the buffer pointer is NULL;
+                        0xfe:error, the buffer is empty;
+                        0x00:success
+                        0x01:failed
+ * 
+ * */
+uint8_t             get_head_pos         (circular_buffer_t * p_buffer,\
+                                                uint32_t * head_pos)
+{
+    if ( NULL == p_buffer )
+    {
+        return 0xFF;
+    }
+   
+    *head_pos = p_buffer->head;
+    return 0x00;
+}
+
+/**
+ * @brief get_data.
+ * 
+ *  
+ * @param[in] circular_buffer_t : Pointer to the target of handler.
+ * @package[in] increment_num : num to add to the head position of the circular buffer.
+* @return      uint8_t : 
+                        0xff:error, the buffer pointer is NULL;
+                        0xfe:error, the buffer is empty;
+                        0x00:success
+                        0x01:failed
+ * 
+ * */
+uint8_t             head_pos_increment         (circular_buffer_t * p_buffer,\
+                                                uint32_t increment_num)
+{
+    if ( NULL == p_buffer )
+    {
+        return 0xFF;
+    }
+    p_buffer->head += increment_num;
+    return 0x00;
+}
