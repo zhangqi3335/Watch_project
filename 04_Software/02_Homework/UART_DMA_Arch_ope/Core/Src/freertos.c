@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * File Name          : freertos.c
-  * Description        : Code for freertos applications
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * File Name          : freertos.c
+ * Description        : Code for freertos applications
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_uart_driver.h"
+#include "uart_parse_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,26 +46,28 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+QueueHandle_t queue_sub_app = NULL;
+
 osThreadId_t Task_uart_driverHandle;
 const osThreadAttr_t Task_bsp_uart_driver_attributes = {
-  .name = "Task_bsp_uart_driver",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "Task_bsp_uart_driver",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "defaultTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 /* Definitions for Task_uart_rec_A */
 osThreadId_t Task_uart_rec_AHandle;
 const osThreadAttr_t Task_uart_rec_A_attributes = {
-  .name = "Task_uart_rec_A",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+    .name = "Task_uart_rec_A",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,11 +81,12 @@ void uart_rec_A_func(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -112,29 +116,44 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-	  /* creation of Task_bsp_uart_driver*/
+  /* creation of Task_bsp_uart_driver*/
   Task_uart_driverHandle = osThreadNew(uart_driver_func, NULL, &Task_bsp_uart_driver_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+  uint8_t ret = 0;
+  uint8_t cmd[1];
+  queue_sub_app = xQueueCreate(1, sizeof(app_msg_t));
+  cmd[0] = 0x01;
+  ret = app_subscribe_array(cmd, queue_sub_app);
+  app_msg_t receive_msg = {.data_cnt = 0, .data = {0}};
+  app_msg_t send_msg = {.data_cnt = 3, .data = {0x01, 0x02, 0x03}};
+  xQueueSend(queue_sub_app, &send_msg, 0);
   /* Infinite loop */
-  for(;;)
+  for (;;)
   {
+    if (pdTRUE == xQueueReceive(queue_sub_app, &receive_msg, 0xffff))
+    {
+      log_i("Task_default: receive_msg.data_cnt = [%d]", receive_msg.data_cnt);
+      for (uint32_t i = 0; i < receive_msg.data_cnt; i++)
+      {
+        log_i("Task_default: receive_msg.data[%d] = [%d]", i, receive_msg.data[i]);
+      }
+    }
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
@@ -142,10 +161,10 @@ void StartDefaultTask(void *argument)
 
 /* USER CODE BEGIN Header_uart_rec_A_func */
 /**
-* @brief Function implementing the Task_uart_rec_A thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the Task_uart_rec_A thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_uart_rec_A_func */
 // void uart_rec_A_func(void *argument)
 // {
@@ -154,7 +173,7 @@ void StartDefaultTask(void *argument)
 // //	log_i("uart_rec_A_func Init Success");
 // //  for(;;)
 // //  {
-// //		
+// //
 // //    osDelay(1);
 // //  }
 //   /* USER CODE END uart_rec_A_func */
@@ -164,4 +183,3 @@ void StartDefaultTask(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-
