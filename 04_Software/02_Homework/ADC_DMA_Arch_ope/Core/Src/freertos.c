@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "elog.h"
+#include "bsp_adc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +58,7 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void app_elog_init(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -96,10 +97,13 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+	BSP_ADC_Init();
+  
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
+	app_elog_init();
   /* USER CODE END RTOS_EVENTS */
 
 }
@@ -117,14 +121,30 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    log_i("HELLO");
-    osDelay(1);
+    //log_i("HELLO");
+    osDelay(10000);
   }
   /* USER CODE END StartDefaultTask */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
+/**
+ * @brief Initialize the easylogger module.
+ * @param None
+ * @retval None
+ */
+void app_elog_init(void){
+  elog_init();
+  /* Set the log format */
+  elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_ALL);
+  elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_ALL);
+  /* Set the output interface */
+  elog_set_filter_lvl(ELOG_LVL_VERBOSE);
+  elog_start();
+}
 /* USER CODE END Application */
 
