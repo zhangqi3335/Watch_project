@@ -30,7 +30,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef void(*pFunction) (void);
+typedef void(*pFunction)(void);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
